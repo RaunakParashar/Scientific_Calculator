@@ -1,0 +1,113 @@
+/* ====== Reset & Font ====== */
+* {
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* ====== Body ====== */
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(160deg, #d0f4e0, #34d399);
+}
+
+/* ====== Calculator Container ====== */
+.calculator {
+  width: 360px;
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 16px;
+  margin-top: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* ====== Display ====== */
+#display {
+  background: #f2f5f3;
+  color: #064f46;
+  font-size: 2.2rem;
+  text-align: right;
+  padding: 22px 16px;
+  border-radius: 22px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* ====== Buttons Grid ====== */
+.buttons {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+/* ====== Button Base Styles ====== */
+.buttons button {
+  height: 60px;
+  border: none;
+  border-radius: 18px;
+  font-size: 1.1rem;
+  color: #064f46;
+  background: #e0f2f1; /* default button color */
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.1s ease-in-out;
+}
+
+.buttons button:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* ====== Operators (only + - × ÷, exclude xʸ) ====== */
+button[onclick*="insertOperator"]:not(#xy) {
+  background: linear-gradient(135deg, #ffcc80, #ff8c00);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ====== Equals Button ====== */
+button[onclick*="calculate"] {
+  background: linear-gradient(135deg, #34d399, #10b981);
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* ====== Scientific Buttons (sin, cos, tan, ln, log, √, degRad, !) ====== */
+#trigonometry,
+#ln,
+#log,
+#√,
+#degRad,
+#\! {
+  background: #d9f2e6;
+  color: #064f46;
+  font-weight: 500;
+}
+
+/* ====== Make xʸ same color as numbers ====== */
+#xy {
+  background: #e0f2f1;
+  color: #064f46;
+  font-weight: 500;
+}
+
+/* ====== Responsive ====== */
+@media (max-width: 400px) {
+  .calculator {
+    width: 90%;
+  }
+  .buttons button {
+    font-size: 1rem;
+    height: 50px;
+  }
+  #display {
+    font-size: 1.8rem;
+    padding: 16px;
+  }
+}

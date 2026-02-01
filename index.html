@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCIENTIFIC CALCULATOR</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1 style="text-align:center; margin-top:20px;">SCIENTIFIC CALCULATOR</h1>
+
+    <div class="calculator">
+        <div id="display">0</div>
+        <div class="buttons">
+
+            <!-- Row 1 -->
+            <button id="degRad" onclick="toggleDegRad()">DEG</button>
+            <button onclick="toggleSecond()">2nd</button>
+            <button id="sin" onclick="pressTrig('sin')">sin</button>
+            <button id="cos" onclick="pressTrig('cos')">cos</button>
+            <button id="tan" onclick="pressTrig('tan')">tan</button>
+
+            <!-- Row 2 -->
+            <button onclick="press('(')">(</button>
+            <button onclick="press(')')">)</button>
+            <button id="ln" onclick="press('ln(')">ln</button>
+            <button id="log" onclick="press('log(')">log</button>
+            <button onclick="press('%')">%</button>
+
+            <!-- Row 3 -->
+            <button onclick="press('7')">7</button>
+            <button onclick="press('8')">8</button>
+            <button onclick="press('9')">9</button>
+            <button onclick="insertOperator('÷')">÷</button>
+            <button onclick="pressFactorial()">!</button>
+
+            <!-- Row 4 -->
+            <button onclick="press('4')">4</button>
+            <button onclick="press('5')">5</button>
+            <button onclick="press('6')">6</button>
+            <button onclick="insertOperator('×')">×</button>
+            <button id="xy" onclick="insertOperator('^')">xʸ</button>
+
+            <!-- Row 5 -->
+            <button onclick="press('1')">1</button>
+            <button onclick="press('2')">2</button>
+            <button onclick="press('3')">3</button>
+            <button onclick="insertOperator('-')">-</button>
+            <button onclick="pressDot()">.</button>
+
+            <!-- Row 6 -->
+            <button onclick="press('0')">0</button>
+            <button onclick="press('π')">π</button>
+            <button onclick="clearAll()">AC</button>
+            <button onclick="insertOperator('+')">+</button>
+            <button onclick="backspace()">Del</button>
+
+            <!-- Row 7 -->
+            <button onclick="calculate()" style="grid-column: span 5;">=</button>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
