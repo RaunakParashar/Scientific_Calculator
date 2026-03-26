@@ -17,27 +17,35 @@ function press(val) {
 //=================INSERT OPERATORS===================
 function insertOperator(op) {
   const operators = ["+", "-", "*", "/", "×", "÷", "%", "^"];
-
-  // Prevent % or ^ as the first character
-  if ((op === "%" || op === "^") && expression === "") return;
-
-  if (expression === "" && op !== "-") return; // first char minus allowed
   const lastChar = expression.slice(-1);
 
-  // Fix consecutive operators
+  // allow minus only at start or after operator (for negative numbers)
+  if (expression === "") {
+    if (op === "-") {
+      expression += op;
+      display.innerText = expression;
+    }
+    return;
+  }
+
+  // if last char is operator
   if (operators.includes(lastChar)) {
+
+    // special case: allow negative number
     if (op === "-" && lastChar !== "-") {
       expression += op;
-    } else {
+    } 
+    else {
+      // replace last operator
       expression = expression.slice(0, -1) + op;
     }
+
   } else {
     expression += op;
   }
 
   display.innerText = expression;
 }
-
 // ================= DECIMAL INPUT =================
 function pressDot() {
   const tokens = expression.split(/[\+\-\*\/×÷\%\^]/);
