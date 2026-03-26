@@ -9,11 +9,22 @@ display.innerText = "0";
 
 // ================= INPUT =================
 function press(val) {
-  if (expression === "Error") expression = "";
+  if (expression === "Error" || expression === "Undefined" || expression === "Infinity") {
+    expression = "";
+  }
+
+  const operators = ["+", "-", "*", "/", "×", "÷", "%", "^"];
+  const lastChar = expression.slice(-1);
+
+  // agar operator hai to insertOperator use karo
+  if (operators.includes(val)) {
+    insertOperator(val);
+    return;
+  }
+
   expression += val;
   display.innerText = expression;
 }
-
 //=================INSERT OPERATORS===================
 function insertOperator(op) {
   const operators = ["+", "-", "*", "/", "×", "÷", "%", "^"];
