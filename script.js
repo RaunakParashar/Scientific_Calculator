@@ -167,6 +167,7 @@ function calculate() {
 
     // ===== Operators and exponent/factorial replacements =====
     exp = exp.replace(/×/g, "*").replace(/÷/g, "/");
+    exp = exp.replace(/(\d+(?:\.\d+)?)%(\d+(?:\.\d+)?)/g, "($1/100)*$2");
     exp = exp.replace(/\^/g, "**");
     exp = exp.replace(/(\d+)!/g, (_, n) => factorial(Number(n)));
 
