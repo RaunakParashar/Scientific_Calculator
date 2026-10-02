@@ -1,211 +1,809 @@
-// ================= VARIABLES =================
-let display = document.getElementById("display");
+const display = document.getElementById("display");
+const degRadBtn = document.getElementById("degRad");
+const sinBtn = document.getElementById("sin");
+const cosBtn = document.getElementById("cos");
+const tanBtn = document.getElementById("tan");
+
 let expression = "";
-let mode = "DEG"; // DEG or RAD
+let mode = "DEG";
 let second = false;
+let resetOnNextInput = false;
 
-// ================= INITIAL DISPLAY =================
-display.innerText = "0";
-
-// ================= INPUT =================
-function press(val) {
-  if (expression === "Error" || expression === "Undefined" || expression === "Infinity") {
-    expression = "";
-  }
-
-  const operators = ["+", "-", "*", "/", "×", "÷", "%", "^"];
-  const lastChar = expression.slice(-1);
-
-  // agar operator hai to insertOperator use karo
-  if (operators.includes(val)) {
-    insertOperator(val);
-    return;
-  }
-
-  expression += val;
-  display.innerText = expression;
-}
-//=================INSERT OPERATORS===================
-function insertOperator(op) {
-  const operators = ["+", "-", "*", "/", "×", "÷", "%", "^"];
-  const lastChar = expression.slice(-1);
-
-  // allow minus only at start or after operator (for negative numbers)
-  if (expression === "") {
-    if (op === "-") {
-      expression += op;
-      display.innerText = expression;
-    }
-    return;
-  }
-
-  // if last char is operator
-  if (operators.includes(lastChar)) {
-
-    // special case: allow negative number
-    if (op === "-" && lastChar !== "-") {
-      expression += op;
-    } 
-    else {
-      // replace last operator
-      expression = expression.slice(0, -1) + op;
-    }
-
-  } else {
-    expression += op;
-  }
-
-  display.innerText = expression;
-}
-// ================= DECIMAL INPUT =================
-function pressDot() {
-  const tokens = expression.split(/[\+\-\*\/×÷\%\^]/);
-  let lastToken = tokens[tokens.length - 1];
-
-  if (lastToken === "") {
-    expression += "0.";
-  } else if (!lastToken.includes(".")) {
-    expression += ".";
-  }
-
-  display.innerText = expression;
+function render() {
+    if (!display) return;
+    display.innerText = expression || "0";
+    display.scrollLeft = display.scrollWidth;
 }
 
-// ================= CLEAR AND BACKSPACE =================
+function isErrorState() {
+    return (
+        expression === "Error" ||
+        expression === "Undefined" ||
+        expression === "Infinity" ||
+        expression === "-Infinity"
+    );
+}
+
+function isOperator(value) {
+    return ["+", "-", "×", "÷", "^", "%"].includes(value);
+}
+
+function isDigit(value) {
+    return /^[0-9]$/.test(value);
+}
+
+function isValueEnding(char) {
+    return /[0-9)π]/.test(char);
+}
+
 function clearAll() {
-  expression = "";
-  display.innerText = "0";
-}
-function backspace() {
-  expression = expression.slice(0, -1);
-  display.innerText = expression || "0";
+    expression = "";
+    resetOnNextInput = false;
+    render();
 }
 
-// ================= TOGGLES =================
-function toggleDegRad() {
-  mode = mode === "DEG" ? "RAD" : "DEG";
-  document.getElementById("degRad").innerText = mode;
+window.toRad = function (x) {
+    return (x * Math.PI) / 180;
+};
+
+window.toDeg = function (x) {
+    return (x * 180) / Math.PI;
+};
+
+window.calcSin = function (x) {
+    const rad = mode === "DEG" ? window.toRad(x) : x;
+    return Math.sin(rad);
+};
+
+window.calcCos = function (x) {
+    const rad = mode === "DEG" ? window.toRad(x) : x;
+    return Math.cos(rad);
+};
+
+window.calcTan = function (x) {
+    const rad = mode === "DEG" ? window.toRad(x) : x;
+
+    if (Math.abs(Math.cos(rad)) < 1e-12) {
+        return Infinity;
+    }
+
+    return Math.tan(rad);
+};
+
+window.calcAsin = function (x) {
+    if (x < -1 || x > 1) {
+        return NaN;
+    }
+
+    const result = Math.asin(x);
+
+    return mode === "DEG"
+        ? window.toDeg(result)
+        : result;
+};
+
+window.calcAcos = function (x) {
+    if (x < -1 || x > 1) {
+        return NaN;
+    }
+
+    const result = Math.acos(x);
+
+    return mode === "DEG"
+        ? window.toDeg(result)
+        : result;
+};
+
+window.calcAtan = function (x) {
+    const result = Math.atan(x);
+
+    return mode === "DEG"
+        ? window.toDeg(result)
+        : result;
+};
+
+window.calcLn = function (x) {
+    return x > 0 ? Math.log(x) : NaN;
+};
+
+window.calcLog = function (x) {
+    return x > 0 ? Math.log10(x) : NaN;
+};
+
+window.calcFactorial = function (n) {
+    if (!Number.isFinite(n)) {
+        return NaN;
+    }
+
+    if (n < 0 || !Number.isInteger(n)) {
+        return NaN;
+    }
+
+    if (n > 170) {
+        return Infinity;
+    }
+
+    if (n === 0 || n === 1) {
+        return 1;
+    }
+
+    let result = 1;
+
+    for (let i = 2; i <= n; i++) {
+        result *= i;
+    }
+
+    return result;
+};
+
+function press(val) {
+    if (isErrorState()) {
+        clearAll();
+    }
+
+    if (resetOnNextInput) {
+        if (
+            !isOperator(val) &&
+            val !== ")" &&
+            val !== "!"
+        ) {
+            expression = "";
+        }
+
+        resetOnNextInput = false;
+    }
+
+    if (isOperator(val)) {
+        insertOperator(val);
+        return;
+    }
+
+    if (val === ".") {
+        pressDot();
+        return;
+    }
+
+    if (isDigit(val)) {
+        if (expression === "0") {
+            expression = val;
+        } else {
+            expression += val;
+        }
+
+        render();
+        return;
+    }
+
+    if (val === "(") {
+        pressOpenParen();
+        return;
+    }
+
+    if (val === ")") {
+        pressCloseParen();
+        return;
+    }
+
+    if (val === "π") {
+        const lastChar = expression.slice(-1);
+
+        if (isValueEnding(lastChar)) {
+            expression += "×";
+        }
+
+        expression += "π";
+
+        render();
+        return;
+    }
+
+    if (
+        val === "sin" ||
+        val === "cos" ||
+        val === "tan"
+    ) {
+        pressTrig(val);
+        return;
+    }
+
+    if (
+        val === "asin" ||
+        val === "acos" ||
+        val === "atan"
+    ) {
+        pressFunction(val);
+        return;
+    }
+
+    if (val === "ln(") {
+        pressFunction("ln");
+        return;
+    }
+
+    if (val === "log(") {
+        pressFunction("log");
+        return;
+    }
+
+    if (val === "ln") {
+        pressFunction("ln");
+        return;
+    }
+
+    if (val === "log") {
+        pressFunction("log");
+        return;
+    }
 }
-function toggleSecond() {
-  second = !second;
-  document.getElementById("sin").innerText = second ? "sin⁻¹" : "sin";
-  document.getElementById("cos").innerText = second ? "cos⁻¹" : "cos";
-  document.getElementById("tan").innerText = second ? "tan⁻¹" : "tan";
+
+function insertOperator(op) {
+    if (isErrorState()) {
+        clearAll();
+    }
+
+    resetOnNextInput = false;
+
+    const lastChar = expression.slice(-1);
+
+    if (expression === "") {
+        if (op === "-") {
+            expression = "-";
+            render();
+        }
+
+        return;
+    }
+
+    if (lastChar === "(") {
+        if (op === "-") {
+            expression += "-";
+            render();
+        }
+
+        return;
+    }
+
+    if (isOperator(lastChar)) {
+        if (op === "-" && lastChar !== "-") {
+            expression += "-";
+            render();
+            return;
+        }
+
+        if (lastChar === "-") {
+            return;
+        }
+
+        expression =
+            expression.slice(0, -1) + op;
+
+        render();
+        return;
+    }
+
+    if (!isValueEnding(lastChar)) {
+        return;
+    }
+
+    expression += op;
+    render();
 }
 
-// ================= TRIG FUNCTIONS =================
-window.toRad = (x) => (x * Math.PI) / 180;
-window.toDeg = (x) => (x * 180) / Math.PI;
+function pressDot() {
+    if (isErrorState()) {
+        clearAll();
+    }
 
-window.sin = (x) => {
-  if (second) return Math.asin(mode === "DEG" ? (x * Math.PI) / 180 : x);
-  return Math.sin(mode === "DEG" ? (x * Math.PI) / 180 : x);
-};
+    if (resetOnNextInput) {
+        expression = "";
+        resetOnNextInput = false;
+    }
 
-window.cos = (x) => {
-  if (second) return Math.acos(mode === "DEG" ? (x * Math.PI) / 180 : x);
-  return Math.cos(mode === "DEG" ? (x * Math.PI) / 180 : x);
-};
+    const parts = expression.split(/[^0-9.]/);
+    const currentNumber = parts[parts.length - 1];
 
-window.tan = (x) => {
-  let val = mode === "DEG" ? (x * Math.PI) / 180 : x;
-  if (!second && mode === "DEG" && Math.abs(val - Math.PI / 2) < 1e-10)
-    return Infinity;
-  return second ? Math.atan(val) : Math.tan(val);
-};
+    if (currentNumber.includes(".")) {
+        return;
+    }
 
-window.asin = (x) => (mode === "DEG" ? toDeg(Math.asin(x)) : Math.asin(x));
-window.acos = (x) => (mode === "DEG" ? toDeg(Math.acos(x)) : Math.acos(x));
-window.atan = (x) => (mode === "DEG" ? toDeg(Math.atan(x)) : Math.atan(x));
+    if (
+        expression === "" ||
+        expression.endsWith("(") ||
+        isOperator(expression.slice(-1))
+    ) {
+        expression += "0.";
+    } else {
+        expression += ".";
+    }
 
-// ================= SCIENTIFIC FUNCTIONS =================
-window.ln = (x) => Math.log(x);
-window.log = (x) => Math.log10(x);
-window.sqrt = (x) => Math.sqrt(x);
-window.pow = (x, y) => Math.pow(x, y);
-window.factorial = (n) => {
-  if (n < 0) return NaN;
-  if (n <= 1) return 1;
-  let f = 1;
-  for (let i = 2; i <= n; i++) f *= i;
-  return f;
-};
-window.inv = (x) => 1 / x;
+    render();
+}
 
-// ================= PRESS TRIG =================
+function pressOpenParen() {
+    if (isErrorState()) {
+        clearAll();
+    }
+
+    if (resetOnNextInput) {
+        expression = "";
+        resetOnNextInput = false;
+    }
+
+    const lastChar = expression.slice(-1);
+
+    if (isValueEnding(lastChar)) {
+        expression += "×";
+    }
+
+    expression += "(";
+
+    render();
+}
+
+function pressCloseParen() {
+    if (isErrorState() || resetOnNextInput) {
+        return;
+    }
+
+    const openCount =
+        (expression.match(/\(/g) || []).length;
+
+    const closeCount =
+        (expression.match(/\)/g) || []).length;
+
+    if (openCount <= closeCount) {
+        return;
+    }
+
+    const lastChar = expression.slice(-1);
+
+    if (
+        lastChar === "(" ||
+        isOperator(lastChar)
+    ) {
+        return;
+    }
+
+    expression += ")";
+    render();
+}
+
 function pressTrig(func) {
-  if (second) {
-    if (func === "sin") press("asin(");
-    else if (func === "cos") press("acos(");
-    else if (func === "tan") press("atan(");
-  } else {
-    if (func === "sin") press("sin(");
-    else if (func === "cos") press("cos(");
-    else if (func === "tan") press("tan(");
-  }
+    if (isErrorState()) {
+        clearAll();
+    }
+
+    if (resetOnNextInput) {
+        expression = "";
+        resetOnNextInput = false;
+    }
+
+    let functionName = func;
+
+    if (second) {
+        if (func === "sin") {
+            functionName = "asin";
+        }
+
+        if (func === "cos") {
+            functionName = "acos";
+        }
+
+        if (func === "tan") {
+            functionName = "atan";
+        }
+    }
+
+    const lastChar = expression.slice(-1);
+
+    if (isValueEnding(lastChar)) {
+        expression += "×";
+    }
+
+    expression += `${functionName}(`;
+
+    render();
 }
 
-// ================= FACTORIAL BUTTON =================
+function pressFunction(func) {
+    if (isErrorState()) {
+        clearAll();
+    }
+
+    if (resetOnNextInput) {
+        expression = "";
+        resetOnNextInput = false;
+    }
+
+    const lastChar = expression.slice(-1);
+
+    if (isValueEnding(lastChar)) {
+        expression += "×";
+    }
+
+    expression += `${func}(`;
+
+    render();
+}
+
 function pressFactorial() {
-  if (expression === "" || expression === "Error") {
-    expression = "0!";
-  } else {
-    expression += "!";
-  }
-  display.innerText = expression;
+    if (isErrorState()) {
+        clearAll();
+    }
+
+    resetOnNextInput = false;
+
+    if (expression === "") {
+        return;
+    }
+
+    const lastChar = expression.slice(-1);
+
+    if (/[0-9)π]/.test(lastChar)) {
+        if (!expression.endsWith("!")) {
+            expression += "!";
+        }
+    }
+
+    render();
 }
 
-// ================= CALCULATE =================
-function calculate() {
-  try {
-    let exp = expression;
+function backspace() {
+    if (isErrorState() || resetOnNextInput) {
+        clearAll();
+        return;
+    }
 
-    // ===== SMART π REPLACEMENT =====
-    exp = exp.replace(/(\d|\))\s*π/g, "$1*Math.PI");
-    exp = exp.replace(/π\s*(\d|\(|!)/g, "Math.PI*$1");
+    const functionTokens = [
+        "asin(",
+        "acos(",
+        "atan(",
+        "sin(",
+        "cos(",
+        "tan(",
+        "log(",
+        "ln("
+    ];
+
+    for (const token of functionTokens) {
+        if (expression.endsWith(token)) {
+            expression =
+                expression.slice(0, -token.length);
+
+            render();
+            return;
+        }
+    }
+
+    expression =
+        expression.slice(0, -1);
+
+    render();
+}
+
+function toggleDegRad() {
+    mode =
+        mode === "DEG"
+            ? "RAD"
+            : "DEG";
+
+    if (degRadBtn) {
+        degRadBtn.innerText = mode;
+    }
+}
+
+function toggleSecond() {
+    second = !second;
+
+    if (sinBtn) {
+        sinBtn.innerText =
+            second ? "sin⁻¹" : "sin";
+    }
+
+    if (cosBtn) {
+        cosBtn.innerText =
+            second ? "cos⁻¹" : "cos";
+    }
+
+    if (tanBtn) {
+        tanBtn.innerText =
+            second ? "tan⁻¹" : "tan";
+    }
+}
+
+function prepareExpression(input) {
+    let exp = input;
+
+    exp = exp
+        .replace(/×/g, "*")
+        .replace(/÷/g, "/");
+
+    exp = exp.replace(/%/g, "*0.01");
+
     exp = exp.replace(/π/g, "Math.PI");
 
-    // ===== Operators and exponent/factorial replacements =====
-    exp = exp.replace(/×/g, "*").replace(/÷/g, "/");
-    exp = exp.replace(/(\d+(?:\.\d+)?)%(\d+(?:\.\d+)?)/g, "($1/100)*$2");
+    exp = exp
+        .replace(/asin\(/g, "window.calcAsin(")
+        .replace(/acos\(/g, "window.calcAcos(")
+        .replace(/atan\(/g, "window.calcAtan(")
+        .replace(/sin\(/g, "window.calcSin(")
+        .replace(/cos\(/g, "window.calcCos(")
+        .replace(/tan\(/g, "window.calcTan(")
+        .replace(/log\(/g, "window.calcLog(")
+        .replace(/ln\(/g, "window.calcLn(");
+
+    let safety = 0;
+
+    while (
+        exp.includes("!") &&
+        safety < 100
+    ) {
+        safety++;
+
+        const factorialPattern =
+            /(\((?:[^()]|\([^()]*\))*\)|Math\.PI|\d+(?:\.\d+)?)!/;
+
+        const match =
+            exp.match(factorialPattern);
+
+        if (!match) {
+            throw new Error("Invalid factorial");
+        }
+
+        const operand = match[1];
+
+        exp = exp.replace(
+            `${operand}!`,
+            `window.calcFactorial(${operand})`
+        );
+    }
+
     exp = exp.replace(/\^/g, "**");
-    exp = exp.replace(/(\d+)!/g, (_, n) => factorial(Number(n)));
 
-    // ===== Auto-close parentheses =====
-    let open = (exp.match(/\(/g) || []).length;
-    let close = (exp.match(/\)/g) || []).length;
-    if (open > close) exp += ")".repeat(open - close);
-
-    // ===== IMPLICIT MULTIPLICATION =====
     exp = exp.replace(
-      /(\d|\))(?=\s*(sin|cos|tan|asin|acos|atan|ln|log|sqrt|inv))/g,
-      "$1*",
+        /(\d|\))\s*(?=\()/g,
+        "$1*"
     );
 
-    // ===== DIVISION BY ZERO CHECK =====
-    if (/\/\s*0(\D|$)/.test(exp)) {
-      expression = "Undefined";
-      display.innerText = expression;
-      return;
-    }
+    exp = exp.replace(
+        /(\d|\))\s*(?=Math\.PI)/g,
+        "$1*"
+    );
 
-    // ===== FINAL EVAL =====
-    let result = eval(exp);
+    exp = exp.replace(
+        /Math\.PI\s*(?=(\d|\())/g,
+        "Math.PI*"
+    );
 
-    // ===== DISPLAY FORMATTING =====
-    if (result === Infinity || result === -Infinity) {
-      expression = "Infinity";
-    } else if (Number.isNaN(result)) {
-      expression = "Undefined";
-    } else if (Number.isInteger(result)) {
-      expression = result.toString();
-    } else {
-      expression = parseFloat(result.toFixed(10)).toString();
-    }
+    exp = exp.replace(
+        /(\d|\))\s*(?=window\.calc(?:Sin|Cos|Tan|Asin|Acos|Atan|Ln|Log)\()/g,
+        "$1*"
+    );
 
-    display.innerText = expression;
-  } catch {
-    display.innerText = "Error";
-    expression = "Error";
-  }
+    exp = exp.replace(
+        /Math\.PI\s*(?=window\.calc(?:Sin|Cos|Tan|Asin|Acos|Atan|Ln|Log)\()/g,
+        "Math.PI*"
+    );
+
+    return exp;
 }
+
+function balanceParentheses(exp) {
+    const openCount =
+        (exp.match(/\(/g) || []).length;
+
+    const closeCount =
+        (exp.match(/\)/g) || []).length;
+
+    if (closeCount > openCount) {
+        throw new Error("Unbalanced parentheses");
+    }
+
+    if (openCount > closeCount) {
+        exp += ")".repeat(
+            openCount - closeCount
+        );
+    }
+
+    return exp;
+}
+
+function validateExpression(exp) {
+    if (!exp.trim()) {
+        throw new Error("Empty expression");
+    }
+
+    const allowedPattern =
+        /^[0-9+\-*/().,\sA-Za-z_]+$/;
+
+    if (!allowedPattern.test(exp)) {
+        throw new Error("Invalid characters");
+    }
+
+    if (
+        /(?:\*{3,}|\/{2,}|\+{2,}|-{3,})/.test(exp)
+    ) {
+        throw new Error("Invalid operators");
+    }
+}
+
+function hasDivisionByZero(exp) {
+    return /\/\s*0(?:\s*\)|\s*$)/.test(exp);
+}
+
+function formatResult(result) {
+    if (result === Infinity) {
+        return "Infinity";
+    }
+
+    if (result === -Infinity) {
+        return "-Infinity";
+    }
+
+    if (Number.isNaN(result)) {
+        return "Undefined";
+    }
+
+    if (!Number.isFinite(result)) {
+        return "Undefined";
+    }
+
+    const rounded =
+        Number(result.toPrecision(12));
+
+    if (Object.is(rounded, -0)) {
+        return "0";
+    }
+
+    return String(rounded);
+}
+
+function calculate() {
+    if (
+        !expression ||
+        expression === "Error" ||
+        expression === "Undefined"
+    ) {
+        return;
+    }
+
+    try {
+        let exp = expression;
+
+        const lastChar =
+            exp.slice(-1);
+
+        if (isOperator(lastChar)) {
+            exp =
+                exp.slice(0, -1);
+
+            if (
+                exp === "" ||
+                exp === "-"
+            ) {
+                expression = "0";
+                resetOnNextInput = true;
+                render();
+                return;
+            }
+        }
+
+        exp =
+            prepareExpression(exp);
+
+        exp =
+            balanceParentheses(exp);
+
+        validateExpression(exp);
+
+        if (hasDivisionByZero(exp)) {
+            expression = "Undefined";
+            render();
+            resetOnNextInput = true;
+            return;
+        }
+
+        const result =
+            Function(
+                `"use strict"; return (${exp});`
+            )();
+
+        expression =
+            formatResult(result);
+
+        render();
+
+        resetOnNextInput = true;
+
+    } catch (error) {
+        console.error(
+            "Calculator error:",
+            error
+        );
+
+        expression = "Error";
+        render();
+        resetOnNextInput = true;
+    }
+}
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        const key = event.key;
+
+        if (/^[0-9]$/.test(key)) {
+            press(key);
+            return;
+        }
+
+        if (key === ".") {
+            pressDot();
+            return;
+        }
+
+        if (key === "+") {
+            press("+");
+            return;
+        }
+
+        if (key === "-") {
+            press("-");
+            return;
+        }
+
+        if (key === "*") {
+            press("×");
+            return;
+        }
+
+        if (key === "/") {
+            event.preventDefault();
+            press("÷");
+            return;
+        }
+
+        if (key === "^") {
+            press("^");
+            return;
+        }
+
+        if (key === "(") {
+            pressOpenParen();
+            return;
+        }
+
+        if (key === ")") {
+            pressCloseParen();
+            return;
+        }
+
+        if (
+            key === "Enter" ||
+            key === "="
+        ) {
+            event.preventDefault();
+            calculate();
+            return;
+        }
+
+        if (key === "Backspace") {
+            backspace();
+            return;
+        }
+
+        if (
+            key === "Escape" ||
+            key === "Delete"
+        ) {
+            clearAll();
+        }
+    }
+);
+
+if (degRadBtn) {
+    degRadBtn.innerText = "DEG";
+}
+
+render();
